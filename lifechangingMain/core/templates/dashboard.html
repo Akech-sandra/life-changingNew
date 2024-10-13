@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} 
 {% load static %}
 {% block content %}
 
@@ -10,12 +10,131 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Dashboard</title>
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <style>
+        /* Modal styling */
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 1;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background-color: rgba(0, 0, 0, 0.4);
+            }
+        
+            .modal-content {
+                background-color: #fefefe;
+                margin: 15% auto;
+                padding: 20px;
+                border: 1px solid #888;
+                width: 50%;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+                border-radius: 10px;
+            }
+        
+            .close {
+                color: #aaa;
+                float: right;
+                font-size: 28px;
+                font-weight: bold;
+            }
+        
+            .close:hover,
+            .close:focus {
+                color: black;
+                text-decoration: none;
+                cursor: pointer;
+            }
+        
+            .contribution-item {
+                display: flex;
+                align-items: center;
+                margin-bottom: 20px;
+                background-color: #ffffff;
+                border: 1px solid #ccc;
+                border-radius: 10px;
+                padding: 15px;
+                width: 30%;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+        
+            .contribution-item img {
+                width: 80px;
+                height: 80px;
+                margin-right: 15px;
+                border-radius: 8px;
+            }
+        
+            .contributions-container {
+                display: flex;
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+        
+            .contributions-list {
+                margin-top: 20px;
+            }
+        
+            .assist {
+                margin-top: 5em;
+            }
+        
+            /* Media query for smaller screens */
+            @media screen and (max-width: 768px) {
+                .contribution-item {
+                    width: 100%;
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+        
+                .modal-content {
+                    width: 90%;
+                }
+        
+                .contributions-container {
+                    flex-direction: column;
+                    align-items: center;
+                }
+        
+                .assist {
+                    margin-top: 2em;
+                }
+            }
+        
+            @media screen and (max-width: 480px) {
+                .contribution-item {
+                    width: 100%;
+                    padding: 10px;
+                }
+        
+                .contributions-container {
+                    flex-direction: column;
+                }
+            }
+
+            .card-container {
+                /* Default styles for the card container */
+                margin-top: 20px; 
+            }
+            
+            /* Media query for smaller screens */
+            @media (max-width: 768px) {
+                .card-container {
+                    margin-top: 100px; 
+                }
+            }
+            
+        </style>
+        
+   
 </head>
 
 <body>
 
     <main>
-        <div class="card-container">
+        <div class="card-container" >
             <section class="user-history" style="background-color: #2a9d8f;">
                 <h2>Your Donation History</h2>
                 <ul>
@@ -30,10 +149,9 @@
             <section class="user-history" style="background-color: #2a9d8f;">
                 <h2>Page Views</h2>
                 <p>Number of views: {{ page_views }}</p>
-                
             </section>
 
-            <section class="user-history" style="background-color: #2a9d8f;" >
+            <section class="user-history" style="background-color: #2a9d8f;">
                 <h2>Your Previous Uplifts</h2>
                 <ul>
                     {% for uplift in uplifts %}
@@ -46,78 +164,292 @@
         </div>
 
         <section class="add-uplift">
-            <div style="display: flex;
-                    justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between;">
                 <h2>Contributions</h2>
-                
+
+                <!-- Contribution button -->
+                <button id="contributionBtn" class="contribution_button">
+                    <b>Add a contribution</b>
+                </button>
+
+                <!-- Modal for the form -->
+                <div id="contributionModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <h2>Add Contribution</h2>
+                        <form method="post" action="{% url 'add_uplift' %}" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                  <input type="text" id="name" name="td_name" placeholder=" " required>
+                                  <label for="name">Username:</label>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                  <input type="email" id="email" name="td_email" placeholder=" ">
+                                  <label for="email">Email for notifications (optional):</label>
+                                </div>
+                                <div class="form-group">
+                                  <input type="text" id="location" name="td_location" placeholder=" " required>
+                                  <label for="location">Location:</label>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                  <select name="td_item" id="item_cat" required>
+                                    <option value="" disabled selected>--Select Item Category--</option>
+                                    <option value="money">Money</option>
+                                    <option value="clothes">Clothes</option>
+                                    <option value="food items">Food</option>
+                                    <option value="others">Others</option>
+                                  </select>
+                                  <label for="item_cat">Select Item Category</label>
+                                </div>
+                                <div class="form-group">
+                                  <input type="text" id="item_name" name="td_item_name" placeholder=" " required>
+                                  <label for="item_name">Item Name:</label>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                  <input type="file" id="photo" name="td_photo_logo" accept="image/*" required>
+                                  <label for="photo">Upload Item Photo:</label>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                  <textarea id="describe" name="td_description" required></textarea>
+                                  <label for="describe">Description:</label>
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="display: flex; justify-content: center;">
+                                <button type="submit">Submit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 <div class="dropdown">
-                        <button class="contribution_button">
-                            <b>Add a contribution</b>
-                        </button>
-                        <div class="dropdown-content">
-                            <a href="/T_donor">As an individual</a>
-                            <a href="/P_donor">As a group</a>
-                        </div>
-                    </div> 
+                    <div class="dropdown-content">
+                        <a href="/T_donor">As an individual</a>
+                        <a href="/P_donor">As a group</a>
+                    </div>
+                </div> 
             </div>
-            <img src="" alt="">
-            <p>Food, Rice. </p>
-            <p>views|15 days ago|messages</p>
-            
-            <!-- <form method="post" action="{% url 'add_uplift' %}">
-                {% csrf_token %}
-                <label for="title">Title:</label>
-                <input type="text" id="title" name="title" required>
-
-                <label for="description">Description:</label>
-                <textarea id="description" name="description" required></textarea>
-
-                <button type="submit">Add Uplift</button>
-            </form> -->
         </section>
-        <br><br>
+
+        <section class="contributions-list">
+            <h2>Recent Contributions</h2>
+            <div class="contributions-container">
+                <div class="contribution-item">
+                    <img src="{% static 'images/cloth.jpg' %}" alt="">
+                    <div>
+                        <h3>Contribution 1</h3>
+                        <p>Username: vanessa</p>
+                        <p>Location: New York</p>
+                        <p>Category: Clothes</p>
+                        <p>Description: Donated winter clothes for those in need.</p>
+                    </div>
+                </div>
+
+                <div class="contribution-item">
+                    <img src="{% static 'images/foods.jpg' %}" alt="">
+                    <div>
+                        <h3>Contribution 2</h3>
+                        <p>Username: sandra</p>
+                        <p>Location: Los Angeles</p>
+                        <p>Category: Food</p>
+                        <p>Description: Donated food items for the local shelter.</p>
+                    </div>
+                </div>
+
+                <div class="contribution-item">
+                    <img src="{% static 'images/moni.jpg' %}" alt="">
+                    <div>
+                        <h3>Contribution 3</h3>
+                        <p>Username: Sumaya</p>
+                        <p>Location: Chicago</p>
+                        <p>Category: Money</p>
+                        <p>Description: Monetary contribution to support community projects.</p>
+                    </div>
+                </div>
+
+               
+            </div>
+        </section>
+<div class="assist">
         <section class="add-uplift">
-            <div style="display: flex;
-            justify-content: space-between;">
-        <h2>Needs</h2>
-            <div class="dropdown">
-            <button class="assistance_button">
-                <b>Seek Assistance</b>
-            </button>
-            <div class="dropdown-content">
-                <a href="/t_receiver">As an individual</a>
+            <div style="display: flex; justify-content: space-between;">
+                <h2>Seek Assistance</h2>
 
-                <a href="/p_receiver">As a group</a>
-            </div>
-        </div>
-        </div>
+                <!-- Seek Assistance button -->
+<button id="seekAssistanceBtn" class="contribution_button">
+    <b>Seek Assistance</b>
+</button>
+
+<!-- Modal for Seek Assistance form -->
+<div id="seekAssistanceModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Seek Assistance</h2>
+        <form method="post" action="{% url 'p_receiver' %}" enctype="multipart/form-data">
+            {% csrf_token %}
             
-            <!-- <form method="post" action="{% url 'add_uplift' %}">
-                {% csrf_token %}
-                <label for="title">Title:</label>
-                <input type="text" id="title" name="title" required>
+            <div class="form-row">
+                <div class="form-group">
+                    <input type="text" id="name" name="sa_name" placeholder=" " required>
+                    <label for="name">Username:</label>
+                </div>
+            </div>
 
-                <label for="description">Description:</label>
-                <textarea id="description" name="description" required></textarea>
+            <div class="form-row">
+                <div class="form-group">
+                    <input type="email" id="email" name="sa_email" placeholder=" ">
+                    <label for="email">Email for notifications (optional):</label>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="location" name="sa_location" placeholder=" " required>
+                    <label for="location">Location:</label>
+                </div>
+            </div>
 
-                <button type="submit">Add</button>
-            </form> -->
+            <div class="form-row">
+                <div class="form-group">
+                  <select name="td_item" id="item_cat" required>
+                    <option value="" disabled selected>--Select Item Category--</option>
+                    <option value="money">Money</option>
+                    <option value="clothes">Clothes</option>
+                    <option value="food items">Food</option>
+                    <option value="others">Others</option>
+                  </select>
+                  <label for="item_cat">Select Item Category</label>
+                </div>
+                <div class="form-group">
+                  <input type="text" id="item_name" name="td_item_name" placeholder=" " required>
+                  <label for="item_name">Item Name:</label>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <textarea id="describe" name="sa_description" required></textarea>
+                    <label for="describe">Description of assistance needed:</label>
+                </div>
+            </div>
+
+            <div class="form-group" style="display: flex; justify-content: center;">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+                <div class="dropdown">
+                    <div class="dropdown-content">
+                        <a href="/T_donor">As an individual</a>
+                        <a href="/P_donor">As a group</a>
+                    </div>
+                </div> 
+            </div>
         </section>
 
-        <!-- <section class="image-section">
-            <h2>Featured Image</h2>
-            <img src="{% static 'images/feature-image.jpg' %}" alt="Featured">
-        </section> -->
+        <section class="contributions-list">
+            <h2>Recent Assistance</h2>
+            <div class="contributions-container">
+                <div class="contribution-item">
+                    <img src="{% static 'images/cloth.jpg' %}" alt="">
+                    <div>
+                        <h3>Assistance 1</h3>
+                        <p>Username: vanessa</p>
+                        <p>Location: New York</p>
+                        <p>Category: Clothes</p>
+                        <p>Description: Seeking assistance for winter clothes.</p>
+                    </div>
+                </div>
+
+                <div class="contribution-item">
+                    <img src="{% static 'images/foods.jpg' %}" alt="">
+                    <div>
+                        <h3>Assistance 2</h3>
+                        <p>Username: sandra</p>
+                        <p>Location: Los Angeles</p>
+                        <p>Category: Food</p>
+                        <p>Description: Seeking assistance for food items for the local shelter.</p>
+                    </div>
+                </div>
+
+                <div class="contribution-item">
+                    <img src="{% static 'images/moni.jpg' %}" alt="">
+                    <div>
+                        <h3>Assistance 3</h3>
+                        <p>Username: Sumaya</p>
+                        <p>Location: Chicago</p>
+                        <p>Category: Money</p>
+                        <p>Description: Monetary Assistance to support community projects.</p>
+                    </div>
+                </div>
+
+               
+            </div>
+        </section>
+    </div>
+
     </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Example JavaScript for enhancing the page
-            console.log('Dashboard page loaded');
-        });
+        // Get the modal elements for Contribution and Assistance
+var contributionModal = document.getElementById('contributionModal');
+var seekAssistanceModal = document.getElementById('seekAssistanceModal');
+
+// Get the button that opens the Contribution modal
+var contributionBtn = document.getElementById('contributionBtn');
+
+// Get the button that opens the Seek Assistance modal
+var seekAssistanceBtn = document.getElementById('seekAssistanceBtn');
+
+// Get the <span> elements that close the modals
+var spanCloseContribution = document.querySelector('#contributionModal .close');
+var spanCloseAssistance = document.querySelector('#seekAssistanceModal .close');
+
+// When the user clicks on the Contribution button, open the Contribution modal
+contributionBtn.onclick = function() {
+    contributionModal.style.display = "block";
+}
+
+// When the user clicks on the Seek Assistance button, open the Seek Assistance modal
+seekAssistanceBtn.onclick = function() {
+    seekAssistanceModal.style.display = "block";
+}
+
+// When the user clicks on <span> (x) for the Contribution modal, close it
+spanCloseContribution.onclick = function() {
+    contributionModal.style.display = "none";
+}
+
+// When the user clicks on <span> (x) for the Assistance modal, close it
+spanCloseAssistance.onclick = function() {
+    seekAssistanceModal.style.display = "none";
+}
+
+// Close modals if user clicks outside of them
+window.onclick = function(event) {
+    if (event.target == contributionModal) {
+        contributionModal.style.display = "none";
+    } else if (event.target == seekAssistanceModal) {
+        seekAssistanceModal.style.display = "none";
+    }
+}
     </script>
+
 </body>
 
 </html>
 
-{% endblock %}
+{% endblock content %}
